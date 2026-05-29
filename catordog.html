@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cat or Dog?</title>
+<style>
+  :root {
+    --cat: #8b5cf6;
+    --cat-soft: #ede9fe;
+    --dog: #f59e0b;
+    --dog-soft: #fef3c7;
+    --accent: var(--cat);
+    --accent-soft: var(--cat-soft);
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --card: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(160deg, #f5f3ff 0%, #fff7ed 100%);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100%;
+    transition: background 0.5s ease;
+  }
+
+  .card {
+    background: var(--card);
+    width: 100%;
+    max-width: 460px;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 18px 50px -12px rgba(31, 36, 48, 0.25);
+    transition: box-shadow 0.4s ease;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* ---- Image stage ---- */
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--accent-soft);
+    transition: background 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .stage img.show { opacity: 1; }
+
+  /* loading + error overlays */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 24px;
+  }
+  .overlay.active { display: flex; }
+
+  .spinner {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 5px solid rgba(255, 255, 255, 0.55);
+    border-top-color: var(--accent);
+    animation: spin 0.85s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .overlay .msg {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .overlay .sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: -6px;
+  }
+
+  .retry-btn {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  /* ---- Slider ---- */
+  .slider-wrap {
+    margin-top: 22px;
+  }
+
+  .slider {
+    position: relative;
+    height: 56px;
+    border-radius: 999px;
+    background: #f1f1f4;
+    border: 1px solid #e5e5ea;
+    display: flex;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+  }
+
+  .slider-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--muted);
+    z-index: 2;
+    transition: color 0.25s ease;
+  }
+  .slider-label.active-cat { color: var(--cat); }
+  .slider-label.active-dog { color: var(--dog); }
+
+  .slider-thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(31, 36, 48, 0.18);
+    z-index: 1;
+    transition: left 0.05s linear, background 0.3s ease;
+  }
+  .slider-thumb.snapping { transition: left 0.28s cubic-bezier(.34,1.4,.64,1), background 0.3s ease; }
+
+  .slider:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  .hint {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  /* ---- New picture button ---- */
+  .new-btn {
+    margin-top: 18px;
+    width: 100%;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.02rem;
+    font-weight: 600;
+    padding: 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.08s ease, opacity 0.2s ease;
+  }
+  .new-btn:hover { filter: brightness(1.05); }
+  .new-btn:active { transform: scale(0.98); }
+  .new-btn:disabled { opacity: 0.55; cursor: progress; }
+
+  footer {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.74rem;
+    color: var(--muted);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 420px) {
+    .card { padding: 20px; border-radius: 20px; }
+    .stage { height: 260px; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <header>
+      <h1 id="title">Cat or Dog?</h1>
+      <p class="subtitle" id="subtitle">Slide to choose your animal</p>
+    </header>
+
+    <div class="stage" id="stage">
+      <img id="photo" alt="A random animal picture" />
+      <div class="overlay active" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="msg">Fetching a cute picture…</div>
+      </div>
+      <div class="overlay" id="errorOverlay">
+        <div class="msg">Couldn't load that picture 😟</div>
+        <div class="sub">Check your connection and try again.</div>
+        <button class="retry-btn" id="retryBtn">Retry</button>
+      </div>
+    </div>
+
+    <div class="slider-wrap">
+      <div class="slider" id="slider" role="slider" tabindex="0"
+           aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"
+           aria-label="Choose cat or dog">
+        <div class="slider-thumb" id="thumb"></div>
+        <div class="slider-label" id="labelCat">🐱 Cat</div>
+        <div class="slider-label" id="labelDog">Dog 🐶</div>
+      </div>
+      <p class="hint">Drag the slider, or use the ← → arrow keys</p>
+    </div>
+
+    <button class="new-btn" id="newBtn">New picture</button>
+
+    <footer>
+      Images from
+      <a href="https://dog.ceo/dog-api/" target="_blank" rel="noopener">Dog API</a> &amp;
+      <a href="https://thecatapi.com/" target="_blank" rel="noopener">TheCatAPI</a>
+    </footer>
+  </main>
+
+<script>
+(function () {
+  "use strict";
+
+  var ENDPOINTS = {
+    cat: "https://api.thecatapi.com/v1/images/search",
+    dog: "https://dog.ceo/api/breeds/image/random"
+  };
+
+  var photo         = document.getElementById("photo");
+  var stage         = document.getElementById("stage");
+  var loadingOverlay= document.getElementById("loadingOverlay");
+  var errorOverlay  = document.getElementById("errorOverlay");
+  var retryBtn      = document.getElementById("retryBtn");
+  var newBtn        = document.getElementById("newBtn");
+  var slider        = document.getElementById("slider");
+  var thumb         = document.getElementById("thumb");
+  var labelCat      = document.getElementById("labelCat");
+  var labelDog      = document.getElementById("labelDog");
+  var title         = document.getElementById("title");
+  var subtitle      = document.getElementById("subtitle");
+
+  var animal = "cat";        // current selection
+  var requestId = 0;         // guards against stale fetches
+
+  // ---- URL extraction per API ----
+  function parseImageUrl(kind, data) {
+    if (kind === "dog") {
+      if (data && data.status === "success" && data.message) return data.message;
+      throw new Error("Unexpected Dog API response");
+    }
+    // cat
+    if (Array.isArray(data) && data[0] && data[0].url) return data[0].url;
+    throw new Error("Unexpected Cat API response");
+  }
+
+  // ---- UI state helpers ----
+  function showLoading() {
+    loadingOverlay.classList.add("active");
+    errorOverlay.classList.remove("active");
+    photo.classList.remove("show");
+    newBtn.disabled = true;
+    newBtn.textContent = "Loading…";
+  }
+  function showImage(url) {
+    photo.src = url;
+    photo.classList.add("show");
+    loadingOverlay.classList.remove("active");
+    errorOverlay.classList.remove("active");
+    newBtn.disabled = false;
+    newBtn.textContent = "New picture";
+  }
+  function showError() {
+    loadingOverlay.classList.remove("active");
+    errorOverlay.classList.add("active");
+    photo.classList.remove("show");
+    newBtn.disabled = false;
+    newBtn.textContent = "New picture";
+  }
+
+  // ---- Fetch flow ----
+  function fetchImage() {
+    var kind = animal;
+    var myId = ++requestId;
+    showLoading();
+
+    fetch(ENDPOINTS[kind], { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var url = parseImageUrl(kind, data);
+        // Preload the actual image so we never show a half-loaded picture.
+        var pre = new Image();
+        pre.onload = function () {
+          if (myId !== requestId) return;   // a newer request superseded this one
+          showImage(url);
+        };
+        pre.onerror = function () {
+          if (myId !== requestId) return;
+          showError();
+        };
+        pre.src = url;
+      })
+      .catch(function () {
+        if (myId !== requestId) return;
+        showError();
+      });
+  }
+
+  // ---- Theme / labels for current animal ----
+  function applyAnimalTheme() {
+    var isDog = animal === "dog";
+    document.documentElement.style.setProperty("--accent", isDog ? "var(--dog)" : "var(--cat)");
+    document.documentElement.style.setProperty("--accent-soft", isDog ? "var(--dog-soft)" : "var(--cat-soft)");
+    labelCat.classList.toggle("active-cat", !isDog);
+    labelDog.classList.toggle("active-dog", isDog);
+    thumb.style.background = isDog ? "var(--dog-soft)" : "var(--cat-soft)";
+    title.textContent = isDog ? "Dog mode 🐶" : "Cat mode 🐱";
+    subtitle.textContent = isDog ? "Showing random dogs" : "Showing random cats";
+    slider.setAttribute("aria-valuenow", isDog ? 1 : 0);
+    slider.setAttribute("aria-valuetext", isDog ? "Dog" : "Cat");
+    photo.alt = "A random " + animal + " picture";
+  }
+
+  // Position thumb at one of the two ends (snapped state).
+  function snapThumb() {
+    thumb.classList.add("snapping");
+    thumb.style.left = animal === "dog" ? "calc(50% + 0px)" : "4px";
+  }
+
+  // Set the animal; fetch a new picture only if the selection changed.
+  function setAnimal(next) {
+    var changed = next !== animal;
+    animal = next;
+    applyAnimalTheme();
+    snapThumb();
+    if (changed) fetchImage();
+  }
+
+  // ---- Drag handling ----
+  var dragging = false;
+
+  function thumbWidth() { return slider.clientWidth / 2; }
+
+  function moveThumbTo(clientX) {
+    var rect = slider.getBoundingClientRect();
+    var half = thumbWidth();
+    var x = clientX - rect.left - half / 2;          // top-left of thumb
+    var max = rect.width - half - 4;
+    if (x < 4) x = 4;
+    if (x > max) x = max;
+    thumb.classList.remove("snapping");
+    thumb.style.left = x + "px";
+  }
+
+  function endDrag(clientX) {
+    if (!dragging) return;
+    dragging = false;
+    var rect = slider.getBoundingClientRect();
+    var past = (clientX - rect.left) > rect.width / 2;
+    setAnimal(past ? "dog" : "cat");
+  }
+
+  slider.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    slider.setPointerCapture(e.pointerId);
+    moveThumbTo(e.clientX);
+  });
+  slider.addEventListener("pointermove", function (e) {
+    if (dragging) moveThumbTo(e.clientX);
+  });
+  slider.addEventListener("pointerup", function (e) {
+    endDrag(e.clientX);
+  });
+  slider.addEventListener("pointercancel", function () {
+    dragging = false;
+    snapThumb();
+  });
+
+  // Keyboard accessibility
+  slider.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setAnimal("cat");
+    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      setAnimal("dog");
+    } else if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      setAnimal(animal === "cat" ? "dog" : "cat");
+    }
+  });
+
+  // ---- Buttons ----
+  newBtn.addEventListener("click", function () {
+    if (!newBtn.disabled) fetchImage();
+  });
+  retryBtn.addEventListener("click", fetchImage);
+
+  // Keep the snapped thumb correct if the window resizes.
+  window.addEventListener("resize", snapThumb);
+
+  // ---- Init ----
+  applyAnimalTheme();
+  snapThumb();
+  fetchImage();
+})();
+</script>
+</body>
+</html>
