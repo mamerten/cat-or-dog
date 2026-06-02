@@ -38,7 +38,7 @@
     width: 100%;
     max-width: 460px;
     border-radius: 24px;
-    padding: 28px;
+    padding: 28px 16px;
     box-shadow: 0 18px 50px -12px rgba(31, 36, 48, 0.25);
     transition: box-shadow 0.4s ease;
   }
@@ -267,9 +267,49 @@
   footer a { color: var(--accent); text-decoration: none; }
 
   @media (max-width: 420px) {
-    .card { padding: 20px; border-radius: 20px; }
+    .card { padding: 20px 14px; border-radius: 20px; }
     .stage { height: 260px; }
     h1 { font-size: 1.4rem; }
+  }
+
+  /* Landscape on phone: stop card from being clipped at the top */
+  @media (orientation: landscape) and (max-height: 500px) {
+    body {
+      align-items: flex-start;
+      padding: 12px 16px;
+    }
+    .card {
+      padding: 16px 14px;
+    }
+    .stage { height: 180px; }
+    header { margin-bottom: 12px; }
+    h1 { font-size: 1.2rem; }
+    .slider-wrap { margin-top: 12px; }
+    .filters { margin-top: 10px; }
+    .new-btn { margin-top: 10px; padding: 10px; }
+    footer { margin-top: 10px; }
+  }
+
+  /* Dark mode — respects the OS/phone dark mode setting automatically */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #f0f0f5;
+      --muted: #9ca3af;
+      --card: #1e1e2e;
+    }
+    body {
+      background: linear-gradient(160deg, #1a1030 0%, #1e1a10 100%);
+    }
+    .slider { background: #2a2a3e; border-color: #3a3a50; }
+    .slider-thumb { background: #3a3a54; box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
+    select {
+      background-color: #2a2a3e;
+      border-color: #3a3a50;
+      color: var(--ink);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    }
+    select:disabled { background-color: #252535; }
+    .card { box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.6); }
   }
 </style>
 </head>
@@ -680,6 +720,33 @@
 
   // Keep the snapped thumb correct if the window resizes.
   window.addEventListener("resize", snapThumb);
+
+  /* ----------------------------------------------------------------
+     Swipe on the image stage → new picture
+     A leftward swipe (finger moves right-to-left) = next picture.
+     A rightward swipe (finger moves left-to-right) = also next picture.
+     Either direction on the image feels natural as "give me another."
+  ---------------------------------------------------------------- */
+  var swipeStartX = null;
+  var swipeStartY = null;
+  var stage = document.getElementById("stage");
+
+  stage.addEventListener("touchstart", function (e) {
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  stage.addEventListener("touchend", function (e) {
+    if (swipeStartX === null) return;
+    var dx = e.changedTouches[0].clientX - swipeStartX;
+    var dy = e.changedTouches[0].clientY - swipeStartY;
+    // Only trigger if horizontal motion is dominant and at least 40px
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      if (!newBtn.disabled) fetchImage();
+    }
+    swipeStartX = null;
+    swipeStartY = null;
+  }, { passive: true });
 
   /* ----------------------------------------------------------------
      Init
