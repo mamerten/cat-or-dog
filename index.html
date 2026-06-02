@@ -39,7 +39,7 @@
     max-width: 680px;
     border-radius: 24px;
     padding: 28px 8px;
-    margin: auto;
+    margin: 0 auto;
     box-shadow: 0 18px 50px -12px rgba(31, 36, 48, 0.25);
     transition: box-shadow 0.4s ease;
   }
@@ -421,6 +421,8 @@
   var animal = "cat";   // current selection
   var requestId = 0;    // guards against stale fetches
   var dogBreeds = {};   // breed -> [sub-breeds]
+  var imageHistory = []; // URLs we've shown, oldest → newest
+  var historyIndex = -1; // current position in imageHistory
 
   /* ----------------------------------------------------------------
      Helpers
@@ -497,9 +499,26 @@
   // Preload the real image so we never show a half-loaded picture.
   function preloadAndShow(url, myId) {
     var pre = new Image();
-    pre.onload  = function () { if (myId === requestId) showImage(url); };
+    pre.onload  = function () {
+      if (myId === requestId) {
+        // Record in history; drop any "forward" entries if we had gone back
+        imageHistory = imageHistory.slice(0, historyIndex + 1);
+        imageHistory.push(url);
+        historyIndex = imageHistory.length - 1;
+        showImage(url);
+      }
+    };
     pre.onerror = function () { if (myId === requestId) showError(); };
     pre.src = url;
+  }
+
+  // Step back one image in our local history (no API call needed).
+  function showPrevious() {
+    if (historyIndex > 0) {
+      historyIndex--;
+      showImage(imageHistory[historyIndex]);
+    }
+    // If historyIndex is 0 we're already at the oldest — silently do nothing.
   }
 
   /* ----------------------------------------------------------------
@@ -742,7 +761,13 @@
     var dy = e.changedTouches[0].clientY - swipeStartY;
     // Only trigger if horizontal motion is dominant and at least 40px
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-      if (!newBtn.disabled) fetchImage();
+      if (dx < 0) {
+        // Finger moved left → fetch a brand-new picture
+        if (!newBtn.disabled) fetchImage();
+      } else {
+        // Finger moved right → go back to the previous picture
+        showPrevious();
+      }
     }
     swipeStartX = null;
     swipeStartY = null;
