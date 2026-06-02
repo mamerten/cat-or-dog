@@ -66,6 +66,7 @@
     position: relative;
     width: 100%;
     height: clamp(260px, 45vw, 420px);
+    max-height: 75vh;
     border-radius: 18px;
     overflow: hidden;
     background: var(--accent-soft);
@@ -338,6 +339,8 @@
       </div>
     </div>
 
+    <button class="new-btn" id="newBtn">New picture</button>
+
     <div class="slider-wrap">
       <div class="slider" id="slider" role="slider" tabindex="0"
            aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"
@@ -381,8 +384,6 @@
       </label>
     </div>
 
-    <button class="new-btn" id="newBtn">New picture</button>
-
     <footer>
       Images from
       <a href="https://dog.ceo/dog-api/" target="_blank" rel="noopener">Dog API</a> &amp;
@@ -398,6 +399,7 @@
      Elements
   ---------------------------------------------------------------- */
   var photo          = document.getElementById("photo");
+  var stage          = document.getElementById("stage");
   var loadingOverlay = document.getElementById("loadingOverlay");
   var errorOverlay   = document.getElementById("errorOverlay");
   var noMatchOverlay = document.getElementById("noMatchOverlay");
@@ -421,7 +423,7 @@
   var animal = "cat";   // current selection
   var requestId = 0;    // guards against stale fetches
   var dogBreeds = {};   // breed -> [sub-breeds]
-  var imageHistory = []; // URLs we've shown, oldest → newest
+  var imageHistory = []; // {url, ratio} objects, oldest → newest
   var historyIndex = -1; // current position in imageHistory
 
   /* ----------------------------------------------------------------
@@ -471,6 +473,11 @@
   }
 
   function showLoading() {
+    // Reset stage to fixed height so the spinner looks consistent
+    stage.style.height = '';
+    photo.style.height = '100%';
+    photo.style.objectFit = 'cover';
+    photo.style.alignSelf = '';
     setOverlay("loading");
     photo.classList.remove("show");
     newBtn.disabled = true;
@@ -496,15 +503,34 @@
     newBtn.textContent = "New picture";
   }
 
+  // Set stage height and image style based on the image's aspect ratio.
+  // Wide images (ratio > 1.5, wider than 3:2) keep the fixed-height cover crop.
+  // Portrait, square, and mild landscape show the full image; stage grows to fit.
+  function applyRatio(ratio) {
+    if (ratio > 1.5) {
+      stage.style.height = '';           // revert to CSS clamp value
+      photo.style.height = '100%';
+      photo.style.objectFit = 'cover';
+      photo.style.alignSelf = '';
+    } else {
+      stage.style.height = 'auto';       // stage grows to fit the full image
+      photo.style.height = 'auto';
+      photo.style.objectFit = 'fill';
+      photo.style.alignSelf = 'flex-start'; // anchor image to top edge
+    }
+  }
+
   // Preload the real image so we never show a half-loaded picture.
   function preloadAndShow(url, myId) {
     var pre = new Image();
     pre.onload  = function () {
       if (myId === requestId) {
+        var ratio = pre.naturalWidth / pre.naturalHeight;
         // Record in history; drop any "forward" entries if we had gone back
         imageHistory = imageHistory.slice(0, historyIndex + 1);
-        imageHistory.push(url);
+        imageHistory.push({url: url, ratio: ratio});
         historyIndex = imageHistory.length - 1;
+        applyRatio(ratio);
         showImage(url);
       }
     };
@@ -516,7 +542,9 @@
   function showPrevious() {
     if (historyIndex > 0) {
       historyIndex--;
-      showImage(imageHistory[historyIndex]);
+      var entry = imageHistory[historyIndex];
+      applyRatio(entry.ratio);
+      showImage(entry.url);
     }
     // If historyIndex is 0 we're already at the oldest — silently do nothing.
   }
@@ -748,7 +776,6 @@
   ---------------------------------------------------------------- */
   var swipeStartX = null;
   var swipeStartY = null;
-  var stage = document.getElementById("stage");
 
   stage.addEventListener("touchstart", function (e) {
     swipeStartX = e.touches[0].clientX;
@@ -765,7 +792,9 @@
         // Finger moved left → go forward in history if possible, else fetch new
         if (historyIndex < imageHistory.length - 1) {
           historyIndex++;
-          showImage(imageHistory[historyIndex]);
+          var entry = imageHistory[historyIndex];
+          applyRatio(entry.ratio);
+          showImage(entry.url);
         } else {
           if (!newBtn.disabled) fetchImage();
         }
