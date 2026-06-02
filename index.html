@@ -762,8 +762,13 @@
     // Only trigger if horizontal motion is dominant and at least 40px
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
       if (dx < 0) {
-        // Finger moved left → fetch a brand-new picture
-        if (!newBtn.disabled) fetchImage();
+        // Finger moved left → go forward in history if possible, else fetch new
+        if (historyIndex < imageHistory.length - 1) {
+          historyIndex++;
+          showImage(imageHistory[historyIndex]);
+        } else {
+          if (!newBtn.disabled) fetchImage();
+        }
       } else {
         // Finger moved right → go back to the previous picture
         showPrevious();
