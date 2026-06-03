@@ -354,6 +354,10 @@
       <a href="https://thecatapi.com/" target="_blank" rel="noopener">TheCatAPI</a> ·
       <a href="https://randomfox.ca/" target="_blank" rel="noopener">RandomFox</a> ·
       <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a>
+      <br>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScQBSHcUxbubsonzrNGCac3luhZPyVrOPGBOBegk3WtFGhX7w/viewform" target="_blank" rel="noopener">🐛 Report a bug</a>
+      &nbsp;·&nbsp;
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSdErDdCmzlPWC9QFwlpvpwK4HH7EMUBzxTvBfT9smz0bJG0_A/viewform" target="_blank" rel="noopener">💡 Request a feature</a>
       <br>v1.1.0
     </footer>
   </main>
@@ -393,10 +397,10 @@
      Animal config
   ---------------------------------------------------------------- */
   var ANIMALS = {
-    cat:      { label: "Cat",      emoji: "🐱", color: "#8b5cf6", soft: "#ede9fe" },
-    dog:      { label: "Dog",      emoji: "🐶", color: "#f59e0b", soft: "#fef3c7" },
-    fox:      { label: "Fox",      emoji: "🦊", color: "#f97316", soft: "#ffedd5" },
-    duck:     { label: "Duck",     emoji: "🦆", color: "#eab308", soft: "#fef9c3" },
+    cat:      { label: "Cat",      emoji: "🐱", color: "#8b5cf6", soft: "#ede9fe", plural: "cats for Annie" },
+    dog:      { label: "Dog",      emoji: "🐶", color: "#f59e0b", soft: "#fef3c7", plural: "dogs for Annie" },
+    fox:      { label: "Fox",      emoji: "🦊", color: "#f97316", soft: "#ffedd5", plural: "foxes for Annie" },
+    duck:     { label: "Duck",     emoji: "🦆", color: "#eab308", soft: "#fef9c3", plural: "ducks for Annie" },
     surprise: { label: "Surprise", emoji: "🎲", color: "#ec4899", soft: "#fce7f3" }
   };
 
@@ -575,7 +579,7 @@
     // Update header to show which animal is loading
     var cfg = ANIMALS[kind];
     title.textContent    = cfg.label + " mode " + cfg.emoji;
-    subtitle.textContent = "Showing random " + cfg.label.toLowerCase() + "s";
+    subtitle.textContent = "Showing random " + (cfg.plural || cfg.label.toLowerCase() + "s");
 
     fetch(buildAnimalUrl(kind), { cache: "no-store" })
       .then(function (res) {
@@ -608,7 +612,7 @@
       subtitle.textContent = "Tap New picture for a random animal…";
     } else {
       title.textContent    = cfg.label + " mode " + cfg.emoji;
-      subtitle.textContent = "Showing random " + cfg.label.toLowerCase() + "s";
+      subtitle.textContent = "Showing random " + (cfg.plural || cfg.label.toLowerCase() + "s");
     }
     photo.alt         = "A random animal picture";
     catFilters.hidden = kind !== "cat";
