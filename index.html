@@ -6,12 +6,8 @@
 <title>Cat or Dog?</title>
 <style>
   :root {
-    --cat: #8b5cf6;
-    --cat-soft: #ede9fe;
-    --dog: #f59e0b;
-    --dog-soft: #fef3c7;
-    --accent: var(--cat);
-    --accent-soft: var(--cat-soft);
+    --accent: #8b5cf6;
+    --accent-soft: #ede9fe;
     --ink: #1f2430;
     --muted: #6b7280;
     --card: #ffffff;
@@ -66,7 +62,6 @@
     position: relative;
     width: 100%;
     height: clamp(260px, 45vw, 420px);
-    max-height: 75vh;
     border-radius: 18px;
     overflow: hidden;
     background: var(--accent-soft);
@@ -133,59 +128,35 @@
     cursor: pointer;
   }
 
-  /* ---- Slider ---- */
-  .slider-wrap {
-    margin-top: 22px;
-  }
-
-  .slider {
-    position: relative;
-    height: 56px;
-    border-radius: 999px;
-    background: #f1f1f4;
-    border: 1px solid #e5e5ea;
+  /* ---- Animal picker ---- */
+  .animal-picker {
     display: flex;
-    cursor: pointer;
-    user-select: none;
-    touch-action: none;
-  }
-
-  .slider-label {
-    flex: 1;
-    display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
     justify-content: center;
-    gap: 6px;
+  }
+
+  .animal-btn {
+    border: 2px solid transparent;
+    background: #f1f1f4;
+    color: var(--muted);
+    font-size: 0.88rem;
     font-weight: 600;
-    font-size: 1rem;
-    color: var(--muted);
-    z-index: 2;
-    transition: color 0.25s ease;
-  }
-  .slider-label.active-cat { color: var(--cat); }
-  .slider-label.active-dog { color: var(--dog); }
-
-  .slider-thumb {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: calc(50% - 4px);
-    height: calc(100% - 8px);
+    padding: 8px 14px;
     border-radius: 999px;
-    background: #fff;
-    box-shadow: 0 4px 14px rgba(31, 36, 48, 0.18);
-    z-index: 1;
-    transition: left 0.05s linear, background 0.3s ease;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    font-family: inherit;
   }
-  .slider-thumb.snapping { transition: left 0.28s cubic-bezier(.34,1.4,.64,1), background 0.3s ease; }
-
-  .slider:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-
-  .hint {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 0.82rem;
-    color: var(--muted);
+  .animal-btn:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .animal-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
   }
 
   /* ---- Filters ---- */
@@ -265,6 +236,7 @@
     margin-top: 16px;
     font-size: 0.74rem;
     color: var(--muted);
+    line-height: 1.8;
   }
   footer a { color: var(--accent); text-decoration: none; }
 
@@ -275,17 +247,13 @@
 
   /* Landscape on phone: stop card from being clipped at the top */
   @media (orientation: landscape) and (max-height: 500px) {
-    body {
-      align-items: flex-start;
-      padding: 12px 16px;
-    }
-    .card {
-      padding: 16px 14px;
-    }
+    body { align-items: flex-start; padding: 12px 16px; }
+    .card { padding: 16px 14px; }
     .stage { height: clamp(260px, 45vw, 420px); max-height: none; }
     header { margin-bottom: 12px; }
     h1 { font-size: 1.2rem; }
-    .slider-wrap { margin-top: 12px; }
+    .animal-picker { margin-top: 12px; gap: 6px; }
+    .animal-btn { padding: 6px 10px; font-size: 0.82rem; }
     .filters { margin-top: 10px; }
     .new-btn { margin-top: 10px; padding: 10px; }
     footer { margin-top: 10px; }
@@ -301,8 +269,8 @@
     body {
       background: linear-gradient(160deg, #1a1030 0%, #1e1a10 100%);
     }
-    .slider { background: #2a2a3e; border-color: #3a3a50; }
-    .slider-thumb { background: #3a3a54; box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
+    .animal-btn { background: #2a2a3e; }
+    .animal-btn.active { background: var(--accent); border-color: var(--accent); }
     select {
       background-color: #2a2a3e;
       border-color: #3a3a50;
@@ -317,8 +285,8 @@
 <body>
   <main class="card">
     <header>
-      <h1 id="title">Cat or Dog?</h1>
-      <p class="subtitle" id="subtitle">Slide to choose your animal</p>
+      <h1 id="title">Cat mode 🐱</h1>
+      <p class="subtitle" id="subtitle">Showing random cats</p>
     </header>
 
     <div class="stage" id="stage">
@@ -341,15 +309,12 @@
 
     <button class="new-btn" id="newBtn">New picture</button>
 
-    <div class="slider-wrap">
-      <div class="slider" id="slider" role="slider" tabindex="0"
-           aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"
-           aria-label="Choose cat or dog">
-        <div class="slider-thumb" id="thumb"></div>
-        <div class="slider-label" id="labelCat">🐱 Cat</div>
-        <div class="slider-label" id="labelDog">Dog 🐶</div>
-      </div>
-      <p class="hint">Drag the slider, or use the ← → arrow keys</p>
+    <div class="animal-picker" id="animalPicker">
+      <button class="animal-btn active" data-animal="cat">🐱 Cat</button>
+      <button class="animal-btn" data-animal="dog">🐶 Dog</button>
+      <button class="animal-btn" data-animal="fox">🦊 Fox</button>
+      <button class="animal-btn" data-animal="duck">🦆 Duck</button>
+      <button class="animal-btn" data-animal="surprise">🎲 Surprise</button>
     </div>
 
     <!-- Cat filters -->
@@ -385,9 +350,11 @@
     </div>
 
     <footer>
-      Images from
-      <a href="https://dog.ceo/dog-api/" target="_blank" rel="noopener">Dog API</a> &amp;
-      <a href="https://thecatapi.com/" target="_blank" rel="noopener">TheCatAPI</a>
+      <a href="https://dog.ceo/dog-api/" target="_blank" rel="noopener">Dog API</a> ·
+      <a href="https://thecatapi.com/" target="_blank" rel="noopener">TheCatAPI</a> ·
+      <a href="https://randomfox.ca/" target="_blank" rel="noopener">RandomFox</a> ·
+      <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a>
+      <br>v1.1.0
     </footer>
   </main>
 
@@ -406,10 +373,6 @@
   var retryBtn       = document.getElementById("retryBtn");
   var resetBtn       = document.getElementById("resetBtn");
   var newBtn         = document.getElementById("newBtn");
-  var slider         = document.getElementById("slider");
-  var thumb          = document.getElementById("thumb");
-  var labelCat       = document.getElementById("labelCat");
-  var labelDog       = document.getElementById("labelDog");
   var title          = document.getElementById("title");
   var subtitle       = document.getElementById("subtitle");
 
@@ -420,11 +383,40 @@
   var dogBreedSel    = document.getElementById("dogBreed");
   var dogSubSel      = document.getElementById("dogSub");
 
-  var animal = "cat";   // current selection
-  var requestId = 0;    // guards against stale fetches
-  var dogBreeds = {};   // breed -> [sub-breeds]
+  var animal    = "cat"; // current selection
+  var requestId = 0;     // guards against stale fetches
+  var dogBreeds = {};    // breed -> [sub-breeds]
   var imageHistory = []; // {url, ratio} objects, oldest → newest
   var historyIndex = -1; // current position in imageHistory
+
+  /* ----------------------------------------------------------------
+     Animal config
+  ---------------------------------------------------------------- */
+  var ANIMALS = {
+    cat:      { label: "Cat",      emoji: "🐱", color: "#8b5cf6", soft: "#ede9fe" },
+    dog:      { label: "Dog",      emoji: "🐶", color: "#f59e0b", soft: "#fef3c7" },
+    fox:      { label: "Fox",      emoji: "🦊", color: "#f97316", soft: "#ffedd5" },
+    duck:     { label: "Duck",     emoji: "🦆", color: "#eab308", soft: "#fef9c3" },
+    surprise: { label: "Surprise", emoji: "🎲", color: "#ec4899", soft: "#fce7f3" }
+  };
+
+  // Weighted surprise pool — weights sum to 100
+  var SURPRISE_WEIGHTS = [
+    { animal: "dog",  weight: 45 },
+    { animal: "cat",  weight: 42 },
+    { animal: "fox",  weight: 10 },
+    { animal: "duck", weight:  3 }
+  ];
+
+  function pickSurprise() {
+    var r = Math.random() * 100;
+    var cumulative = 0;
+    for (var i = 0; i < SURPRISE_WEIGHTS.length; i++) {
+      cumulative += SURPRISE_WEIGHTS[i].weight;
+      if (r < cumulative) return SURPRISE_WEIGHTS[i].animal;
+    }
+    return SURPRISE_WEIGHTS[0].animal; // fallback
+  }
 
   /* ----------------------------------------------------------------
      Helpers
@@ -433,7 +425,6 @@
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   }
 
-  // Fallback category list (used only if the live fetch fails).
   var CAT_CATEGORY_FALLBACK = [
     { id: "4",  name: "boxes" },
     { id: "5",  name: "caturday" },
@@ -446,7 +437,7 @@
   ];
 
   /* ----------------------------------------------------------------
-     Build request URLs from the active filters
+     Build request URLs
   ---------------------------------------------------------------- */
   function buildCatUrl() {
     var url = "https://api.thecatapi.com/v1/images/search?limit=1&order=RANDOM";
@@ -463,72 +454,97 @@
     return "https://dog.ceo/api/breed/" + breed + "/images/random";
   }
 
+  function buildAnimalUrl(kind) {
+    switch (kind) {
+      case "cat":  return buildCatUrl();
+      case "dog":  return buildDogUrl();
+      case "fox":  return "https://randomfox.ca/floof/";
+      case "duck": return "https://commons.wikimedia.org/w/api.php?action=query&generator=categorymembers&gcmtitle=Category:Ducks&gcmtype=file&gcmlimit=50&prop=imageinfo&iiprop=url%7Cmime&format=json&origin=*";
+      default:     return null;
+    }
+  }
+
+  function extractImageUrl(kind, data) {
+    switch (kind) {
+      case "cat":  return (Array.isArray(data) && data[0] && data[0].url) ? data[0].url : null;
+      case "dog":  return (data && data.status === "success" && data.message) ? data.message : null;
+      case "fox":  return (data && data.image) ? data.image : null;
+      case "duck": {
+        // Wikimedia Commons returns a pages object; pick a random JPEG from it
+        if (!data || !data.query || !data.query.pages) return null;
+        var pages = Object.values(data.query.pages);
+        var jpgs = pages.filter(function(p) {
+          return p.imageinfo && p.imageinfo[0] && p.imageinfo[0].mime === "image/jpeg";
+        });
+        if (!jpgs.length) return null;
+        return jpgs[Math.floor(Math.random() * jpgs.length)].imageinfo[0].url;
+      }
+      default:     return null;
+    }
+  }
+
   /* ----------------------------------------------------------------
      UI state helpers
   ---------------------------------------------------------------- */
-  function setOverlay(which) {  // "loading" | "error" | "nomatch" | null
+  function setOverlay(which) {
     loadingOverlay.classList.toggle("active", which === "loading");
     errorOverlay.classList.toggle("active",   which === "error");
     noMatchOverlay.classList.toggle("active", which === "nomatch");
   }
 
   function showLoading() {
-    // Reset stage to fixed height so the spinner looks consistent
-    stage.style.height = '';
-    photo.style.height = '100%';
-    photo.style.objectFit = 'cover';
-    photo.style.alignSelf = '';
+    stage.style.height    = "";
+    photo.style.height    = "100%";
+    photo.style.objectFit = "cover";
+    photo.style.alignSelf = "";
     setOverlay("loading");
     photo.classList.remove("show");
-    newBtn.disabled = true;
+    newBtn.disabled    = true;
     newBtn.textContent = "Loading…";
   }
   function showImage(url) {
     photo.src = url;
     photo.classList.add("show");
     setOverlay(null);
-    newBtn.disabled = false;
+    newBtn.disabled    = false;
     newBtn.textContent = "New picture";
   }
   function showError() {
     setOverlay("error");
     photo.classList.remove("show");
-    newBtn.disabled = false;
+    newBtn.disabled    = false;
     newBtn.textContent = "New picture";
   }
   function showNoMatch() {
     setOverlay("nomatch");
     photo.classList.remove("show");
-    newBtn.disabled = false;
+    newBtn.disabled    = false;
     newBtn.textContent = "New picture";
   }
 
-  // Set stage height and image style based on the image's aspect ratio.
-  // Wide images (ratio > 1.5, wider than 3:2) keep the fixed-height cover crop.
-  // Portrait, square, and mild landscape show the full image; stage grows to fit.
+  // Adjust stage/image display for the image's aspect ratio.
   function applyRatio(ratio) {
     if (ratio > 1.5) {
-      stage.style.height = '';           // revert to CSS clamp value
-      photo.style.height = '100%';
-      photo.style.objectFit = 'cover';
-      photo.style.alignSelf = '';
+      stage.style.height    = "";
+      photo.style.height    = "100%";
+      photo.style.objectFit = "cover";
+      photo.style.alignSelf = "";
     } else {
-      stage.style.height = 'auto';       // stage grows to fit the full image
-      photo.style.height = 'auto';
-      photo.style.objectFit = 'fill';
-      photo.style.alignSelf = 'flex-start'; // anchor image to top edge
+      stage.style.height    = "auto";
+      photo.style.height    = "auto";
+      photo.style.objectFit = "fill";
+      photo.style.alignSelf = "flex-start";
     }
   }
 
-  // Preload the real image so we never show a half-loaded picture.
+  // Preload so we never flash a half-loaded image.
   function preloadAndShow(url, myId) {
     var pre = new Image();
-    pre.onload  = function () {
+    pre.onload = function () {
       if (myId === requestId) {
         var ratio = pre.naturalWidth / pre.naturalHeight;
-        // Record in history; drop any "forward" entries if we had gone back
         imageHistory = imageHistory.slice(0, historyIndex + 1);
-        imageHistory.push({url: url, ratio: ratio});
+        imageHistory.push({ url: url, ratio: ratio });
         historyIndex = imageHistory.length - 1;
         applyRatio(ratio);
         showImage(url);
@@ -538,7 +554,7 @@
     pre.src = url;
   }
 
-  // Step back one image in our local history (no API call needed).
+  // Step back one image in local history (no API call needed).
   function showPrevious() {
     if (historyIndex > 0) {
       historyIndex--;
@@ -546,41 +562,34 @@
       applyRatio(entry.ratio);
       showImage(entry.url);
     }
-    // If historyIndex is 0 we're already at the oldest — silently do nothing.
   }
 
   /* ----------------------------------------------------------------
      Fetch flow
   ---------------------------------------------------------------- */
   function fetchImage() {
-    var kind = animal;
+    var kind = (animal === "surprise") ? pickSurprise() : animal;
     var myId = ++requestId;
     showLoading();
 
-    var url = kind === "dog" ? buildDogUrl() : buildCatUrl();
+    // Update header to show which animal is loading
+    var cfg = ANIMALS[kind];
+    title.textContent    = cfg.label + " mode " + cfg.emoji;
+    subtitle.textContent = "Showing random " + cfg.label.toLowerCase() + "s";
 
-    fetch(url, { cache: "no-store" })
+    fetch(buildAnimalUrl(kind), { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
       })
       .then(function (data) {
-        if (myId !== requestId) return;  // superseded by a newer request
-
-        if (kind === "cat") {
-          // Search returns an array — empty means the filter matched nothing.
-          if (!Array.isArray(data) || data.length === 0 || !data[0] || !data[0].url) {
-            showNoMatch();
-            return;
-          }
-          preloadAndShow(data[0].url, myId);
-        } else {
-          if (!data || data.status !== "success" || !data.message) {
-            showError();
-            return;
-          }
-          preloadAndShow(data.message, myId);
+        if (myId !== requestId) return;
+        var imgUrl = extractImageUrl(kind, data);
+        if (!imgUrl) {
+          kind === "cat" ? showNoMatch() : showError();
+          return;
         }
+        preloadAndShow(imgUrl, myId);
       })
       .catch(function () {
         if (myId === requestId) showError();
@@ -588,99 +597,47 @@
   }
 
   /* ----------------------------------------------------------------
-     Theme / labels / which filter panel is visible
+     Theme / which filter panel is visible
   ---------------------------------------------------------------- */
-  function applyAnimalTheme() {
-    var isDog = animal === "dog";
-    document.documentElement.style.setProperty("--accent",      isDog ? "var(--dog)"      : "var(--cat)");
-    document.documentElement.style.setProperty("--accent-soft", isDog ? "var(--dog-soft)" : "var(--cat-soft)");
-    labelCat.classList.toggle("active-cat", !isDog);
-    labelDog.classList.toggle("active-dog", isDog);
-    thumb.style.background = isDog ? "var(--dog-soft)" : "var(--cat-soft)";
-    title.textContent    = isDog ? "Dog mode 🐶" : "Cat mode 🐱";
-    subtitle.textContent = isDog ? "Showing random dogs" : "Showing random cats";
-    slider.setAttribute("aria-valuenow", isDog ? 1 : 0);
-    slider.setAttribute("aria-valuetext", isDog ? "Dog" : "Cat");
-    photo.alt = "A random " + animal + " picture";
-    catFilters.hidden = isDog;
-    dogFilters.hidden = !isDog;
-  }
-
-  // Position thumb at one of the two ends (snapped state).
-  function snapThumb() {
-    thumb.classList.add("snapping");
-    thumb.style.left = animal === "dog" ? "calc(50% + 0px)" : "4px";
+  function applyAnimalTheme(kind) {
+    var cfg = ANIMALS[kind] || ANIMALS.cat;
+    document.documentElement.style.setProperty("--accent",      cfg.color);
+    document.documentElement.style.setProperty("--accent-soft", cfg.soft);
+    if (kind === "surprise") {
+      title.textContent    = "Surprise! 🎲";
+      subtitle.textContent = "Tap New picture for a random animal…";
+    } else {
+      title.textContent    = cfg.label + " mode " + cfg.emoji;
+      subtitle.textContent = "Showing random " + cfg.label.toLowerCase() + "s";
+    }
+    photo.alt         = "A random animal picture";
+    catFilters.hidden = kind !== "cat";
+    dogFilters.hidden = kind !== "dog";
+    document.querySelectorAll(".animal-btn").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.animal === kind);
+    });
   }
 
   // Set the animal; fetch a new picture only if the selection changed.
   function setAnimal(next) {
     var changed = next !== animal;
     animal = next;
-    applyAnimalTheme();
-    snapThumb();
+    applyAnimalTheme(next);
     if (changed) fetchImage();
   }
 
   /* ----------------------------------------------------------------
-     Drag handling
+     Animal picker events
   ---------------------------------------------------------------- */
-  var dragging = false;
-
-  function thumbWidth() { return slider.clientWidth / 2; }
-
-  function moveThumbTo(clientX) {
-    var rect = slider.getBoundingClientRect();
-    var half = thumbWidth();
-    var x = clientX - rect.left - half / 2;   // top-left of thumb
-    var max = rect.width - half - 4;
-    if (x < 4) x = 4;
-    if (x > max) x = max;
-    thumb.classList.remove("snapping");
-    thumb.style.left = x + "px";
-  }
-
-  function endDrag(clientX) {
-    if (!dragging) return;
-    dragging = false;
-    var rect = slider.getBoundingClientRect();
-    var past = (clientX - rect.left) > rect.width / 2;
-    setAnimal(past ? "dog" : "cat");
-  }
-
-  slider.addEventListener("pointerdown", function (e) {
-    dragging = true;
-    slider.setPointerCapture(e.pointerId);
-    moveThumbTo(e.clientX);
-  });
-  slider.addEventListener("pointermove", function (e) {
-    if (dragging) moveThumbTo(e.clientX);
-  });
-  slider.addEventListener("pointerup", function (e) {
-    endDrag(e.clientX);
-  });
-  slider.addEventListener("pointercancel", function () {
-    dragging = false;
-    snapThumb();
-  });
-
-  // Keyboard accessibility
-  slider.addEventListener("keydown", function (e) {
-    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      e.preventDefault();
-      setAnimal("cat");
-    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      e.preventDefault();
-      setAnimal("dog");
-    } else if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      setAnimal(animal === "cat" ? "dog" : "cat");
-    }
+  document.querySelectorAll(".animal-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setAnimal(btn.dataset.animal);
+    });
   });
 
   /* ----------------------------------------------------------------
      Filter dropdowns
   ---------------------------------------------------------------- */
-  // Rebuild the dog sub-breed dropdown for the currently selected breed.
   function populateDogSubBreeds() {
     var breed = dogBreedSel.value;
     dogSubSel.innerHTML = "";
@@ -706,7 +663,7 @@
           if (b && b.id && b.name) catBreedSel.add(new Option(b.name, b.id));
         });
       })
-      .catch(function () { /* leave just "Any breed" */ });
+      .catch(function () {});
   }
 
   function loadCatCategories() {
@@ -738,7 +695,7 @@
           dogBreedSel.add(new Option(capitalize(b), b));
         });
       })
-      .catch(function () { /* leave just "Any breed" */ });
+      .catch(function () {});
   }
 
   /* ----------------------------------------------------------------
@@ -748,7 +705,7 @@
   catCategorySel.addEventListener("change", fetchImage);
 
   dogBreedSel.addEventListener("change", function () {
-    populateDogSubBreeds();   // sub-breed list depends on the breed
+    populateDogSubBreeds();
     fetchImage();
   });
   dogSubSel.addEventListener("change", fetchImage);
@@ -758,21 +715,16 @@
   });
   retryBtn.addEventListener("click", fetchImage);
 
-  // Recover from a no-match result by clearing the cat filters.
   resetBtn.addEventListener("click", function () {
     catBreedSel.value = "";
     catCategorySel.value = "";
     fetchImage();
   });
 
-  // Keep the snapped thumb correct if the window resizes.
-  window.addEventListener("resize", snapThumb);
-
   /* ----------------------------------------------------------------
-     Swipe on the image stage → new picture
-     A leftward swipe (finger moves right-to-left) = next picture.
-     A rightward swipe (finger moves left-to-right) = also next picture.
-     Either direction on the image feels natural as "give me another."
+     Swipe on the image stage
+     Swipe left (finger moves left)  → forward in history, or fetch new
+     Swipe right (finger moves right) → back in history
   ---------------------------------------------------------------- */
   var swipeStartX = null;
   var swipeStartY = null;
@@ -786,20 +738,19 @@
     if (swipeStartX === null) return;
     var dx = e.changedTouches[0].clientX - swipeStartX;
     var dy = e.changedTouches[0].clientY - swipeStartY;
-    // Only trigger if horizontal motion is dominant and at least 40px
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
       if (dx < 0) {
-        // Finger moved left → go forward in history if possible, else fetch new
+        // Swipe left → go forward in history if possible, else fetch new
         if (historyIndex < imageHistory.length - 1) {
           historyIndex++;
-          var entry = imageHistory[historyIndex];
-          applyRatio(entry.ratio);
-          showImage(entry.url);
+          var fwd = imageHistory[historyIndex];
+          applyRatio(fwd.ratio);
+          showImage(fwd.url);
         } else {
           if (!newBtn.disabled) fetchImage();
         }
       } else {
-        // Finger moved right → go back to the previous picture
+        // Swipe right → go back
         showPrevious();
       }
     }
@@ -810,8 +761,7 @@
   /* ----------------------------------------------------------------
      Init
   ---------------------------------------------------------------- */
-  applyAnimalTheme();
-  snapThumb();
+  applyAnimalTheme(animal);
   populateDogSubBreeds();
   loadCatBreeds();
   loadCatCategories();
